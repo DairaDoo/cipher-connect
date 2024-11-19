@@ -1,0 +1,135 @@
+Resumen del Proyecto
+Objetivo:
+Crear una aplicación web con Flutter (Frontend), Express.js (Backend) y SQLite (Base de datos) que permita:
+
+Registro de usuarios.
+Inicio de sesión con autenticación mediante OTP enviado por correo electrónico.
+Acceso a un juego interactivo de César Cipher, cuya lógica se implementará únicamente en el frontend.
+Tecnologías Necesarias
+Frontend (Flutter Web)
+Framework: Flutter.
+
+Paquetes útiles:
+
+http: Para interactuar con el backend (registro, login, validación OTP).
+flutter_secure_storage: Para guardar información como tokens de sesión.
+provider o riverpod: Para manejar el estado de usuario (logged in, etc.).
+Juego de César Cipher:
+
+Toda la lógica se hará en Dart, dentro del frontend. Puedes usar un simple widget que incluya:
+Campo de texto para ingresar el mensaje.
+Campo numérico para el desplazamiento.
+Botón para cifrar/descifrar.
+Backend (Express.js)
+Framework: Express.js.
+Paquetes clave:
+express: Para manejar rutas y solicitudes.
+sqlite3: Para manejar la base de datos SQLite.
+bcrypt: Para cifrar contraseñas.
+nodemailer: Para enviar los códigos OTP por correo electrónico.
+crypto: Para generar códigos OTP aleatorios.
+jsonwebtoken: Para manejar la autenticación basada en tokens (opcional).
+Base de Datos (SQLite)
+Base de datos ligera para almacenar:
+Usuarios: Emails y contraseñas cifradas.
+Códigos OTP temporales: Almacenar temporalmente los OTP asociados a los usuarios para validación.
+Estructura de Tablas
+Tabla de Usuarios:
+sql
+Copiar código
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Tabla de OTP Temporales:
+sql
+Copiar código
+CREATE TABLE otps (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    otp_code TEXT NOT NULL,
+    expires_at TIMESTAMP NOT NULL
+);
+Flujo del Proyecto
+1. Registro de Usuario
+Frontend:
+Formulario con email y contraseña.
+Backend:
+Valida el email.
+Cifra la contraseña con bcrypt.
+Guarda los datos en la tabla users.
+2. Inicio de Sesión con OTP
+Frontend:
+Formulario para ingresar email y contraseña.
+Si las credenciales son válidas, se solicita el OTP.
+Backend:
+Valida el email y la contraseña.
+Genera un OTP aleatorio (usando crypto.randomBytes) y lo guarda temporalmente en la tabla otps con una caducidad (ej., 5 minutos).
+Envía el OTP por correo utilizando nodemailer.
+Ruta adicional para validar el OTP. Si es correcto, se emite un token o sesión.
+3. Acceso al Juego César Cipher
+Frontend:
+
+Después de un login exitoso, el usuario accede a la pantalla del juego.
+Incluye:
+Entrada de texto para el mensaje.
+Entrada para el desplazamiento (número).
+Botón para cifrar/descifrar.
+Lógica del Juego (en Flutter):
+
+dart
+Copiar código
+String caesarCipher(String text, int shift, bool encrypt) {
+  final int base = encrypt ? shift : -shift;
+  return String.fromCharCodes(text.runes.map((char) {
+    if (char >= 65 && char <= 90) {
+      // Mayúsculas
+      return (char - 65 + base) % 26 + 65;
+    } else if (char >= 97 && char <= 122) {
+      // Minúsculas
+      return (char - 97 + base) % 26 + 97;
+    }
+    return char; // No cambia caracteres no alfabéticos
+  }));
+}
+Estructura del Proyecto
+Frontend (Flutter)
+bash
+Copiar código
+lib/
+├── main.dart
+├── screens/
+│   ├── login_screen.dart        # Pantalla de inicio de sesión
+│   ├── register_screen.dart     # Pantalla de registro
+│   ├── otp_verification_screen.dart  # Verificación OTP
+│   └── game_screen.dart         # Juego César Cipher
+├── services/
+│   ├── auth_service.dart        # Lógica para interactuar con las APIs del backend
+└── widgets/
+    ├── otp_input_field.dart     # Input personalizado para OTP
+    └── custom_button.dart       # Botones reutilizables
+Backend (Express.js)
+bash
+Copiar código
+backend/
+├── app.js
+├── routes/
+│   ├── auth.js                  # Rutas para registro e inicio de sesión
+│   └── otp.js                   # Rutas para generación y validación de OTP
+├── models/
+│   ├── userModel.js             # Interacción con la tabla de usuarios
+│   └── otpModel.js              # Interacción con la tabla de OTPs
+├── middleware/
+│   └── authMiddleware.js        # Middleware para validar tokens (opcional)
+├── utils/
+│   ├── otpGenerator.js          # Lógica para generar OTP
+│   └── emailSender.js           # Configuración de nodemailer
+└── database/
+    └── db.js                    # Configuración y conexión con SQLite
+
+Resumen Final
+Este proyecto combina Flutter Web con Express.js y SQLite para ofrecer un flujo sencillo y funcional. El uso de OTP permite una autenticación segura sin depender de aplicaciones externas, mientras que el juego de César Cipher proporciona una experiencia interactiva gestionada completamente desde el frontend.
+
+¿Te interesa comenzar con alguna parte específica del proyecto? Puedo ayudarte con el código inicial del backend, frontend o la base de datos.
