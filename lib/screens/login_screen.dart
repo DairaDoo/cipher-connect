@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import '../widgets/my_textfield.dart';
+import '../widgets/my_button.dart';
 
 class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+  LoginPage({super.key});
+
+  // text editing controllers
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -27,26 +33,37 @@ class LoginPage extends StatelessWidget {
             SizedBox(height: 25),
 
             // username textfield
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade400)),
-                  fillColor: Colors.grey.shade200,
-                  filled: true,
-                ),
-              ),
-            )
+            MyTextField(
+              controller: usernameController,
+              hintText: 'Username',
+              obscureText: false,
+            ),
+
+            const SizedBox(height: 10),
+
             // password textfield
+            MyTextField(
+              controller: passwordController,
+              hintText: 'Password',
+              obscureText: true,
+            ),
 
             // forgot password
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text('Forgot Password?',
+                      style: TextStyle(color: Colors.grey[600])),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 25),
 
             // sign in button
-
+            MyButton(),
             // or continue with
 
             // not a member? register now
