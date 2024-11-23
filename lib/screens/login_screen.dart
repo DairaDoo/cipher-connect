@@ -1,17 +1,46 @@
+// login_screen.dart
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../widgets/my_textfield.dart';
 import '../widgets/my_button.dart';
+import 'otp_form_screen.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   LoginPage({super.key});
 
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   // Text editing controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
   // Método futuro encargado de logear al usuario.
-  void signUserIn() {}
+  void signUserIn() {
+    // Usuario falso para prueba
+    const fakeUsername = 'testuser';
+    const fakePassword = '123456';
+
+    if (usernameController.text == fakeUsername &&
+        passwordController.text == fakePassword) {
+      // Navegar a la pantalla OTP si el usuario es válido
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtpForm(),
+        ),
+      );
+    } else {
+      // Mostrar un error si las credenciales son inválidas
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid username or password'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,16 +54,13 @@ class LoginPage extends StatelessWidget {
             padding: const EdgeInsets.all(20.0),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: 600, // Anchura máxima para pantallas grandes
-                minHeight:
-                    mediaQuery.size.height - 40, // Altura mínima sin overflow
+                maxWidth: 600,
+                minHeight: mediaQuery.size.height - 40,
               ),
               child: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.center, // Centrado vertical
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Título de la app
                   Text(
                     'Cipher Connect',
                     textAlign: TextAlign.center,
@@ -42,12 +68,10 @@ class LoginPage extends StatelessWidget {
                       fontSize: isMobile ? 30 : 36,
                       fontWeight: FontWeight.bold,
                       color: Colors.blueAccent,
-                      fontFamily: 'Poppins', // Fuente Poppins
+                      fontFamily: 'Poppins',
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Cuadro con el contenido de login
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -63,15 +87,12 @@ class LoginPage extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        // Logo
                         const Icon(
                           Icons.security,
                           size: 60,
                           color: Colors.blueAccent,
                         ),
                         const SizedBox(height: 15),
-
-                        // Texto de bienvenida
                         Text(
                           'Welcome Back,\nYou\'ve been missed!',
                           textAlign: TextAlign.center,
@@ -79,47 +100,37 @@ class LoginPage extends StatelessWidget {
                             color: Colors.grey[700],
                             fontSize: isMobile ? 16 : 18,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'Roboto', // Fuente Roboto
+                            fontFamily: 'Roboto',
                           ),
                         ),
                         const SizedBox(height: 20),
-
-                        // Username textfield
                         MyTextField(
                           controller: usernameController,
                           hintText: 'Username',
                           obscureText: false,
                         ),
                         const SizedBox(height: 12),
-
-                        // Password textfield
                         MyTextField(
                           controller: passwordController,
                           hintText: 'Password',
                           obscureText: true,
                         ),
                         const SizedBox(height: 8),
-
-                        // Forgot password
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {
-                              // Acción para "Forgot Password"
-                            },
-                            child: Text(
+                            onPressed: () {},
+                            child: const Text(
                               'Forgot Password?',
                               style: TextStyle(
                                 color: Colors.blueAccent,
                                 fontSize: 14,
-                                fontFamily: 'Roboto', // Fuente Roboto
+                                fontFamily: 'Roboto',
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(height: 20),
-
-                        // Sign in button
                         SizedBox(
                           width: double.infinity,
                           child: MyButton(
@@ -127,8 +138,6 @@ class LoginPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 30),
-
-                        // Register now
                         RichText(
                           text: TextSpan(
                             style: TextStyle(
@@ -142,11 +151,15 @@ class LoginPage extends StatelessWidget {
                                 style: const TextStyle(
                                   color: Colors.blueAccent,
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'Roboto', // Fuente Roboto
+                                  fontFamily: 'Roboto',
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
-                                    // Acción para registrar
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Not implemented yet!'),
+                                      ),
+                                    );
                                   },
                               ),
                             ],
