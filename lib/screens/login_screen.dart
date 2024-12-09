@@ -1,9 +1,10 @@
-// login_screen.dart
-import 'package:flutter/gestures.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'otp_form_screen.dart';
+import 'package:flutter/gestures.dart'; // Import this package
 import '../widgets/my_textfield.dart';
 import '../widgets/my_button.dart';
-import 'otp_form_screen.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({super.key});
@@ -13,27 +14,40 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Text editing controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
-  // Método futuro encargado de logear al usuario.
-  void signUserIn() {
-    // Usuario falso para prueba
-    const fakeUsername = 'testuser';
-    const fakePassword = '123456';
+  // Método para hacer login en el backend
+  Future<void> signUserIn() async {
+    final username = usernameController.text;
+    final password = passwordController.text;
 
-    if (usernameController.text == fakeUsername &&
-        passwordController.text == fakePassword) {
-      // Navegar a la pantalla OTP si el usuario es válido
+    // Dirección de la API Flask para el login
+    final url = Uri.parse('http://127.0.0.1:5000/login');
+
+    // Enviar la solicitud al backend
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({
+        'username': username,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Si el login es exitoso, navegar a la pantalla OTP
+      final responseBody = json.decode(response.body);
+      final otp = responseBody['otp']; // OTP recibido en la respuesta
+
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => OtpForm(),
+          builder: (context) => OtpForm(otp: otp),
         ),
       );
     } else {
-      // Mostrar un error si las credenciales son inválidas
+      // Si el login falla, mostrar un mensaje de error
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Invalid username or password'),

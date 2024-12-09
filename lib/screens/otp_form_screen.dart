@@ -1,11 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class OtpForm extends StatelessWidget {
-  OtpForm({super.key});
+  OtpForm({super.key, required this.otp});
 
+  final String otp; // Aceptamos el parámetro 'otp'
   final pinController = TextEditingController();
   final formKey = GlobalKey<FormState>();
+
+  // Función para hacer la solicitud POST a la ruta 'verify_otp'
+  // Función para hacer la solicitud POST a la ruta 'verify_otp'
+  Future<void> verifyOtp(BuildContext context) async {
+    final otpEntered = pinController.text; // El OTP ingresado por el usuario
+
+    if (otpEntered.length == 6) {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:5000/verify_otp'), // Reemplaza con tu URL
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'otp': otpEntered, // Solo enviamos el OTP
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Verification Successful')),
+        );
+        // Aquí puedes navegar a la siguiente pantalla si la verificación es exitosa
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid OTP')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 6-digit OTP')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +136,7 @@ class OtpForm extends StatelessWidget {
 
                         // Instrucción
                         Text(
-                          'Enter the 4-digit code sent to your email/phone.',
+                          'Enter the 6-digit code sent to your email/phone.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.grey[600],
@@ -114,17 +150,10 @@ class OtpForm extends StatelessWidget {
                           key: formKey,
                           child: Pinput(
                             controller: pinController,
-                            length: 4,
+                            length: 6,
                             defaultPinTheme: defaultPinTheme,
                             focusedPinTheme: focusedPinTheme,
                             submittedPinTheme: submittedPinTheme,
-                            validator: (pin) {
-                              if (pin == '1234') {
-                                return null; // PIN válido
-                              } else {
-                                return 'Invalid PIN';
-                              }
-                            },
                             pinputAutovalidateMode:
                                 PinputAutovalidateMode.onSubmit,
                             showCursor: true,
@@ -138,11 +167,8 @@ class OtpForm extends StatelessWidget {
                           child: ElevatedButton(
                             onPressed: () {
                               if (formKey.currentState?.validate() ?? false) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Verification Successful'),
-                                  ),
-                                );
+                                verifyOtp(
+                                    context); // Llamada a la función de verificación
                               }
                             },
                             style: ElevatedButton.styleFrom(
@@ -163,6 +189,7 @@ class OtpForm extends StatelessWidget {
                             ),
                           ),
                         ),
+
                         const SizedBox(height: 10),
 
                         // Enlace para regresar al login
