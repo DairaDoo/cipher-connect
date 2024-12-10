@@ -1,129 +1,185 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
 
-class CaesarCipherGame extends StatefulWidget {
+class PasswordManagerPage extends StatefulWidget {
+  const PasswordManagerPage({super.key});
+
   @override
-  _CaesarCipherGameState createState() => _CaesarCipherGameState();
+  _PasswordManagerPageState createState() => _PasswordManagerPageState();
 }
 
-class _CaesarCipherGameState extends State<CaesarCipherGame> {
-  final textController = TextEditingController();
-  final shiftController = TextEditingController();
-  String resultText = '';
+class _PasswordManagerPageState extends State<PasswordManagerPage> {
+  final _storage = const FlutterSecureStorage();
+  final TextEditingController _serviceController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final _key = encrypt.Key.fromUtf8('32characterslongencryptionkey12345'); // 32 bytes key
+  final _iv = encrypt.IV.fromLength(16); // 16 bytes IV
 
-  // Función para cifrar texto
-  String caesarCipher(String text, int shift, bool encrypt) {
-    final normalizedShift = (encrypt ? shift : -shift) % 26;
-    return text.split('').map((char) {
-      if (char.contains(RegExp(r'[a-zA-Z]'))) {
-        final isUpperCase = char == char.toUpperCase();
-        final asciiOffset = isUpperCase ? 65 : 97;
-        final encryptedChar =
-            ((char.codeUnitAt(0) - asciiOffset + normalizedShift) % 26 + 26) %
-                    26 +
-                asciiOffset;
-        return String.fromCharCode(encryptedChar);
-      } else {
-        return char; // No cambia caracteres no alfabéticos
-      }
-    }).join('');
+  // Colores personalizados
+  final Color _primaryColor = const Color(0xFF1D2A44); // Azul oscuro
+  final Color _secondaryColor = const Color(0xFFC19A6B); // Dorado
+  final Color _accentColor = Colors.white; // Blanco para fondo de botones y campos de texto
+
+  // Método para cifrar la contraseña antes de guardarla
+  String _encryptPassword(String password) {
+    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
+    return encrypter.encrypt(password, iv: _iv).base64;
   }
 
-  void encryptText() {
-    final text = textController.text;
-    final shift = int.tryParse(shiftController.text) ?? 0;
-    setState(() {
-      resultText = caesarCipher(text, shift, true);
-    });
+  // Método para guardar la contraseña cifrada
+  Future<void> _savePassword() async {
+    String encryptedPassword = _encryptPassword(_passwordController.text);
+    await _storage.write(key: _serviceController.text, value: encryptedPassword);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Password saved successfully")));
+    setState(() {});
   }
 
-  void decryptText() {
-    final text = textController.text;
-    final shift = int.tryParse(shiftController.text) ?? 0;
-    setState(() {
-      resultText = caesarCipher(text, shift, false);
-    });
+  // Método para descifrar la contraseña
+  String _decryptPassword(String encryptedPassword) {
+    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
+    return encrypter.decrypt64(encryptedPassword, iv: _iv);
+  }
+
+  // Método para obtener y mostrar las contraseñas
+  Future<String?> _getPassword(String service) async {
+    String? encryptedPassword = await _storage.read(key: service);
+    if (encryptedPassword != null) {
+      return _decryptPassword(encryptedPassword);
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Caesar Cipher Game'),
-        backgroundColor: Colors.blueAccent,
+        title: const Text(
+          "Password Manager",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
+        ),
+        backgroundColor: _primaryColor, // Azul oscuro
+        elevation: 4,
+        centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Enter Text:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'Enter Service Name:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
+            // Campo de texto para ingresar el nombre del servicio
             TextField(
-              controller: textController,
+              controller: _serviceController,
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Type your text here...',
+                hintText: 'e.g., Amazon, Google',
+                hintStyle: const TextStyle(color: Colors.grey),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(color: _primaryColor, width: 2),
+                ),
+                filled: true,
+                fillColor: _accentColor,
+                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(color: _secondaryColor, width: 2),
+                ),
               ),
             ),
             const SizedBox(height: 20),
+
             const Text(
-              'Shift Value:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'Enter Password:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
+            // Campo de texto para ingresar la contraseña
             TextField(
-              controller: shiftController,
-              keyboardType: TextInputType.number,
+              controller: _passwordController,
+              obscureText: true, // Para ocultar la contraseña
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Enter shift value...',
+                hintText: 'Enter your password',
+                hintStyle: const TextStyle(color: Colors.grey),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(color: _primaryColor, width: 2),
+                ),
+                filled: true,
+                fillColor: _accentColor,
+                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(color: _secondaryColor, width: 2),
+                ),
               ),
             ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: encryptText,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    child: const Text('Encrypt'),
-                  ),
+
+            // Botón para guardar la contraseña
+            ElevatedButton(
+              onPressed: _savePassword,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primaryColor, // Azul oscuro
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: decryptText,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    child: const Text('Decrypt'),
-                  ),
-                ),
-              ],
+                elevation: 4,
+              ),
+              child: const Text('Save Password', style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
+
             const Text(
-              'Result:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'Retrieve Password:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
             ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
+            const SizedBox(height: 12),
+            // Campo de texto para recuperar la contraseña
+            TextField(
+              controller: _serviceController,
+              decoration: InputDecoration(
+                hintText: 'Enter service name to retrieve password',
+                hintStyle: const TextStyle(color: Colors.grey),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(color: _primaryColor, width: 2),
+                ),
+                filled: true,
+                fillColor: _accentColor,
+                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(color: _secondaryColor, width: 2),
+                ),
               ),
-              child: Text(
-                resultText,
-                style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+
+            // Botón para recuperar la contraseña
+            ElevatedButton(
+              onPressed: () async {
+                String? password = await _getPassword(_serviceController.text);
+                if (password != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Password: $password")));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No password found for this service")));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _secondaryColor, // Dorado
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 4,
               ),
+              child: const Text('Retrieve Password', style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
           ],
         ),

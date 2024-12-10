@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import './screens/login_screen.dart';
+import 'screens/password_manager_screen.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -11,8 +12,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: (LoginPage()),
+      debugShowCheckedModeBanner: false, // Elimina la marca de debug
+      theme: ThemeData(
+        primarySwatch: Colors.deepPurple, // Estilo principal de la app
+      ),
+      home: const PasswordManagerScreen(), // Se referencia la clase actualizada
     );
   }
 }
