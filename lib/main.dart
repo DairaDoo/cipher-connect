@@ -1,6 +1,6 @@
+import 'package:cipher_connect/screens/game_screen.dart';
+import 'package:cipher_connect/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'screens/password_manager_screen.dart';
-
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.deepPurple, // Estilo principal de la app
       ),
-      home: const PasswordManagerScreen(), // Se referencia la clase actualizada
+      home: const CeaserCipherGame(), // Se referencia la clase actualizada
     );
   }
 }

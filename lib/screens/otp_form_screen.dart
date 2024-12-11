@@ -1,3 +1,6 @@
+import 'package:cipher_connect/screens/game_screen.dart';
+
+import '../screens/password_manager_page.dart';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'package:http/http.dart' as http;
@@ -30,7 +33,13 @@ class OtpForm extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Verification Successful')),
         );
-        // Aquí puedes navegar a la siguiente pantalla si la verificación es exitosa
+        // Redirige a la pantalla de PasswordManagerPage después de una verificación exitosa
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CeaserCipherGame(),
+          ),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid OTP')),
@@ -195,7 +204,13 @@ class OtpForm extends StatelessWidget {
                         // Enlace para regresar al login
                         GestureDetector(
                           onTap: () {
-                            Navigator.pop(context); // Regresa al login
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PasswordManagerPage(),
+                              ),
+                            ); // redireccionar al juego ceaser cipher
                           },
                           child: const Text(
                             'Back to Login',
