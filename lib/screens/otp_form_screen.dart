@@ -1,5 +1,4 @@
 import 'package:cipher_connect/screens/game_screen.dart';
-
 import '../screens/password_manager_page.dart';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
@@ -13,7 +12,6 @@ class OtpForm extends StatelessWidget {
   final pinController = TextEditingController();
   final formKey = GlobalKey<FormState>();
 
-  // Función para hacer la solicitud POST a la ruta 'verify_otp'
   // Función para hacer la solicitud POST a la ruta 'verify_otp'
   Future<void> verifyOtp(BuildContext context) async {
     final otpEntered = pinController.text; // El OTP ingresado por el usuario
@@ -33,13 +31,9 @@ class OtpForm extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Verification Successful')),
         );
-        // Redirige a la pantalla de PasswordManagerPage después de una verificación exitosa
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const CeaserCipherGame(),
-          ),
-        );
+
+        // Mostrar diálogo para elegir la siguiente pantalla
+        _showNextScreenChoice(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid OTP')),
@@ -50,6 +44,44 @@ class OtpForm extends StatelessWidget {
         const SnackBar(content: Text('Please enter a valid 6-digit OTP')),
       );
     }
+  }
+
+  // Función para mostrar el diálogo de elección de pantalla
+  void _showNextScreenChoice(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Where would you like to go?'),
+          content:
+              const Text('Choose either the Ceaser Cipher or Password Manager'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Ceaser Cipher'),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CeaserCipherGame(),
+                  ),
+                );
+              },
+            ),
+            TextButton(
+              child: const Text('Password Manager'),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PasswordManagerPage(),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -207,8 +239,7 @@ class OtpForm extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const PasswordManagerPage(),
+                                builder: (context) => PasswordManagerPage(),
                               ),
                             ); // redireccionar al juego ceaser cipher
                           },

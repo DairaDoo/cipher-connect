@@ -1,206 +1,133 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:encrypt/encrypt.dart' as encrypt;
+import '../services/storage_service.dart';
 
 class PasswordManagerPage extends StatefulWidget {
-  const PasswordManagerPage({super.key});
-
   @override
   _PasswordManagerPageState createState() => _PasswordManagerPageState();
 }
 
 class _PasswordManagerPageState extends State<PasswordManagerPage> {
-  final _storage = const FlutterSecureStorage();
-  final TextEditingController _serviceController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final _key = encrypt.Key.fromUtf8(
-      '32characterslongencryptionkey12345'); // 32 bytes key
-  final _iv = encrypt.IV.fromLength(16); // 16 bytes IV
+  TextEditingController _serviceController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
 
-  // Colores personalizados
-  final Color _primaryColor = const Color(0xFF1D2A44); // Azul oscuro
-  final Color _secondaryColor = const Color(0xFFC19A6B); // Dorado
-  final Color _accentColor =
-      Colors.white; // Blanco para fondo de botones y campos de texto
+  // Función para guardar la contraseña
+  void _savePassword() {
+    String service = _serviceController.text;
+    String password = _passwordController.text;
 
-  // Método para cifrar la contraseña antes de guardarla
-  String _encryptPassword(String password) {
-    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
-    return encrypter.encrypt(password, iv: _iv).base64;
+    if (service.isNotEmpty && password.isNotEmpty) {
+      // Guardar la contraseña en localStorage
+      StorageService.saveCredentials(service, password);
+      setState(() {});
+      _serviceController.clear();
+      _passwordController.clear();
+    }
   }
 
-  // Método para guardar la contraseña cifrada
-  Future<void> _savePassword() async {
-    String encryptedPassword = _encryptPassword(_passwordController.text);
-    await _storage.write(
-        key: _serviceController.text, value: encryptedPassword);
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password saved successfully")));
+  // Función para eliminar las credenciales almacenadas
+  void _clearCredentials(String service) {
+    StorageService.removeCredentials(service);
     setState(() {});
   }
 
-  // Método para descifrar la contraseña
-  String _decryptPassword(String encryptedPassword) {
-    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
-    return encrypter.decrypt64(encryptedPassword, iv: _iv);
-  }
-
-  // Método para obtener y mostrar las contraseñas
-  Future<String?> _getPassword(String service) async {
-    String? encryptedPassword = await _storage.read(key: service);
-    if (encryptedPassword != null) {
-      return _decryptPassword(encryptedPassword);
-    }
-    return null;
+  // Mostrar detalles de la contraseña del servicio en un cuadro de diálogo
+  void _showPasswordDetails(String service) {
+    String? password = StorageService.getPassword(service);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Service: $service'),
+          content: Text('Password: $password'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    List<String> services = StorageService.getAllServices();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Password Manager",
-          style: TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
-        ),
-        backgroundColor: _primaryColor, // Azul oscuro
-        elevation: 4,
+        title: Text('Password Manager',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         centerTitle: true,
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Enter Service Name:',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87),
-            ),
-            const SizedBox(height: 12),
-            // Campo de texto para ingresar el nombre del servicio
+            // Campo de entrada para el servicio
             TextField(
               controller: _serviceController,
               decoration: InputDecoration(
-                hintText: 'e.g., Amazon, Google',
-                hintStyle: const TextStyle(color: Colors.grey),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: _primaryColor, width: 2),
-                ),
-                filled: true,
-                fillColor: _accentColor,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: _secondaryColor, width: 2),
-                ),
+                labelText: 'Service',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.business),
               ),
             ),
-            const SizedBox(height: 20),
-
-            const Text(
-              'Enter Password:',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87),
-            ),
-            const SizedBox(height: 12),
-            // Campo de texto para ingresar la contraseña
+            SizedBox(height: 10),
+            // Campo de entrada para la contraseña
             TextField(
               controller: _passwordController,
-              obscureText: true, // Para ocultar la contraseña
               decoration: InputDecoration(
-                hintText: 'Enter your password',
-                hintStyle: const TextStyle(color: Colors.grey),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: _primaryColor, width: 2),
-                ),
-                filled: true,
-                fillColor: _accentColor,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: _secondaryColor, width: 2),
-                ),
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.lock),
               ),
+              obscureText: true,
             ),
-            const SizedBox(height: 20),
-
+            SizedBox(height: 20),
             // Botón para guardar la contraseña
             ElevatedButton(
               onPressed: _savePassword,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryColor, // Azul oscuro
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                elevation: 4,
+                backgroundColor: Colors.blueAccent,
+                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              child: const Text('Save Password',
-                  style: TextStyle(fontSize: 16, color: Colors.white)),
+              child: Text('Save Password'),
             ),
-            const SizedBox(height: 20),
-
-            const Text(
-              'Retrieve Password:',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87),
+            SizedBox(height: 20),
+            Text(
+              'Stored Services:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 12),
-            // Campo de texto para recuperar la contraseña
-            TextField(
-              controller: _serviceController,
-              decoration: InputDecoration(
-                hintText: 'Enter service name to retrieve password',
-                hintStyle: const TextStyle(color: Colors.grey),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: _primaryColor, width: 2),
-                ),
-                filled: true,
-                fillColor: _accentColor,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: _secondaryColor, width: 2),
-                ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: services.length,
+                itemBuilder: (context, index) {
+                  String service = services[index];
+                  return Card(
+                    elevation: 5,
+                    margin: EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
+                    child: ListTile(
+                      contentPadding: EdgeInsets.all(16),
+                      title: Text(service,
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      subtitle: Text('Click to view details'),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _clearCredentials(service),
+                      ),
+                      onTap: () => _showPasswordDetails(service),
+                    ),
+                  );
+                },
               ),
-            ),
-            const SizedBox(height: 20),
-
-            // Botón para recuperar la contraseña
-            ElevatedButton(
-              onPressed: () async {
-                String? password = await _getPassword(_serviceController.text);
-                if (password != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Password: $password")));
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("No password found for this service")));
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _secondaryColor, // Dorado
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                elevation: 4,
-              ),
-              child: const Text('Retrieve Password',
-                  style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
           ],
         ),

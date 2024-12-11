@@ -28,6 +28,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        minSdkVersion 23 // Flutter Secure Storage requiere un SDK mínimo de 23
     }
 
     buildTypes {
